@@ -3,8 +3,8 @@ import type {
   Shopify as ShopifyApi,
   ShopifyRestResources as RestResources,
 } from '@shopify/shopify-api'
-import { SHOPIFY } from '../constants/shopify.js'
-import ShopifyService from '../../services/shopify.js'
+import type { SHOPIFY } from '../constants/shopify.ts'
+import type ShopifyService from '../../services/shopify.ts'
 
 /**
  * A list of REST resources inferred using the config defined inside

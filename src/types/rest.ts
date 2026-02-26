@@ -1,6 +1,6 @@
-import ShopifyProvider from '../../providers/shopify_provider.js'
-import { Session, ApiVersion, ShopifyClients } from '@shopify/shopify-api'
-import type { ShopifyRestResources } from './index.js'
+import type ShopifyProvider from '../../providers/shopify_provider.ts'
+import type { Session, ApiVersion, ShopifyClients } from '@shopify/shopify-api'
+import type { ShopifyRestResources } from './index.ts'
 
 type ShopifyRestInstances<Resources extends ShopifyRestResources> = {
   [K in keyof Resources]: InstanceType<Resources[K]>
