@@ -1,4 +1,4 @@
-![@mixxtor/adonisjs-shopify](https://socialify.git.ci/mixxtor/adonisjs-shopify/image?description=1&descriptionEditable=Shopify%20adapter%20for%20AdonisJS.&font=Jost&forks=1&issues=1&logo=https://cdn.shopify.com/shopifycloud/brochure/assets/brand-assets/shopify-logo-shopping-bag-full-color-66166b2e55d67988b56b4bd28b63c271e2b9713358cb723070a92bde17ad7d63.svg&name=1&owner=1&pattern=Charlie%20Brown&pulls=1&stargazers=1&theme=Auto)
+![@ordius/adonisjs-shopify](https://socialify.git.ci/ordius/adonisjs-shopify/image?description=1&descriptionEditable=Shopify%20adapter%20for%20AdonisJS.&font=Jost&forks=1&issues=1&logo=https://cdn.shopify.com/shopifycloud/brochure/assets/brand-assets/shopify-logo-shopping-bag-full-color-66166b2e55d67988b56b4bd28b63c271e2b9713358cb723070a92bde17ad7d63.svg&name=1&owner=1&pattern=Charlie%20Brown&pulls=1&stargazers=1&theme=Auto)
 
 # Introduce
 
@@ -7,7 +7,7 @@ This package provides a ready-to-use Shopify REST API client, making it easy to 
 ## Installation
 
 ```bash
-npm install @mixxtor/adonisjs-shopify
+npm install @ordius/adonisjs-shopify
 ```
 
 ## Setup
@@ -17,7 +17,7 @@ npm install @mixxtor/adonisjs-shopify
 First, add the package to your AdonisJS project:
 
 ```bash
-node ace configure @mixxtor/adonisjs-shopify
+node ace configure @ordius/adonisjs-shopify
 ```
 
 ### 2. Environment Variables
@@ -41,7 +41,7 @@ The package provider should be automatically registered in `adonisrc.ts`:
 export default defineConfig({
   providers: [
     // ... other providers
-    () => import('@mixxtor/adonisjs-shopify/providers/shopify_provider'),
+    () => import('@ordius/adonisjs-shopify/providers/shopify_provider'),
   ],
 })
 ```
@@ -51,12 +51,12 @@ export default defineConfig({
 Create `config/shopify.ts`:
 
 ```typescript
-import { defineConfig } from '@mixxtor/adonisjs-shopify'
+import { defineConfig } from '@ordius/adonisjs-shopify'
 import { RestResources } from '@shopify/shopify-api/rest/admin/2025-07'
 import env from '#start/env'
 
 // Extend the container types for proper REST resource type inference
-declare module '@mixxtor/adonisjs-shopify/types' {
+declare module '@ordius/adonisjs-shopify/types' {
   interface ShopifyRestResources extends RestResources {}
 }
 
@@ -115,7 +115,7 @@ export const shopify = await app.container.make('shopify')
 ```typescript
 // In your services/controllers
 import { inject } from '@adonisjs/core'
-import type { ShopifyService } from '@mixxtor/adonisjs-shopify/types'
+import type { ShopifyService } from '@ordius/adonisjs-shopify/types'
 
 @inject()
 export default class ProductService {
@@ -142,7 +142,7 @@ export default class ProductService {
 
 ```typescript
 // Alternative: Import service directly
-import shopify from '@mixxtor/adonisjs-shopify/services/main'
+import shopify from '@ordius/adonisjs-shopify/services/main'
 
 export default class ShopController {
   async index({ session }: HttpContext) {

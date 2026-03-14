@@ -54,7 +54,7 @@ export async function configure(command: ConfigureCommand) {
    * Register provider
    */
   await codemods.updateRcFile((rcFile) => {
-    rcFile.addProvider('@mixxtor/adonisjs-shopify/provider')
+    rcFile.addProvider('@ordius/adonisjs-shopify/provider')
   })
 
   /**

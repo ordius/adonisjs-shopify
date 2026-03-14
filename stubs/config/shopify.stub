@@ -2,8 +2,8 @@
   exports({ to: app.configPath('shopify.ts')  })
 }}}
 import env from '#start/env'
-import { SHOPIFY } from '@mixxtor/adonisjs-shopify/constants'
-import { defineConfig } from '@mixxtor/adonisjs-shopify'
+import { SHOPIFY } from '@ordius/adonisjs-shopify/constants'
+import { defineConfig } from '@ordius/adonisjs-shopify'
 import { restResources, type RestResources } from '@shopify/shopify-api/rest/admin/2025-07'
 import { LATEST_API_VERSION, LogSeverity } from '@shopify/shopify-api'
 
@@ -60,6 +60,6 @@ const shopify = defineConfig({
 export default shopify
 
 /** Extend the container types for proper inference */
-declare module '@mixxtor/adonisjs-shopify/types' {
+declare module '@ordius/adonisjs-shopify/types' {
   interface ShopifyRestResources extends RestResources { }
 }
