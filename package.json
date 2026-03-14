@@ -77,8 +77,8 @@
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@adonisjs/core": "^7.0.0",
-    "@shopify/shopify-api": "^12.3.0"
+    "@adonisjs/core": "^6.20.0 || ^7.0.0",
+    "@shopify/shopify-api": "^12.3.0 || ^13.0.0"
   },
   "dependencies": {
     "jsonwebtoken": "^9.0.3"
