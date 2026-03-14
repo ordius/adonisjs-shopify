@@ -1,6 +1,6 @@
 {
   "name": "@ordius/adonisjs-shopify",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "AdonisJS provider for Shopify API integration",
   "engines": {
     "node": ">=20.6.0"
