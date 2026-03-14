@@ -1,5 +1,5 @@
 /*
- * @mixxtor/adonisjs-shopify
+ * @ordius/adonisjs-shopify
  *
  * (c) Mixxtor
  *

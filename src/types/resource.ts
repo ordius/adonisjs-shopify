@@ -1,4 +1,4 @@
-import { SHOPIFY } from '../constants/shopify.js'
+import { type SHOPIFY } from '../constants/shopify.js'
 
 /** Type of Shopify resources */
 export type TShopifyResource = (typeof SHOPIFY.RESOURCE)[keyof typeof SHOPIFY.RESOURCE]

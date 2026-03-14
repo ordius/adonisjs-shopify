@@ -1,4 +1,4 @@
-import { SHOPIFY } from '../constants/shopify.js'
+import { type SHOPIFY } from '../constants/shopify.js'
 
 export type TShopifyPlan =
   | (typeof SHOPIFY.PLAN.REST)[keyof typeof SHOPIFY.PLAN.REST]

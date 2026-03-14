@@ -1,4 +1,4 @@
-import { ApplicationService } from '@adonisjs/core/types'
+import type { ApplicationService } from '@adonisjs/core/types'
 import ShopifyService from '../services/shopify.js'
 import type { FutureFlagOptions, ShopifyAppCredentials, ShopifyConfig } from '../src/types/index.js'
 import type { ConfigParams, ShopifyRestResources } from '@shopify/shopify-api'

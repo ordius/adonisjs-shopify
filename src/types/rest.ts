@@ -1,5 +1,5 @@
-import ShopifyProvider from '../../providers/shopify_provider.js'
-import { Session, ApiVersion, ShopifyClients } from '@shopify/shopify-api'
+import type ShopifyProvider from '../../providers/shopify_provider.js'
+import type { Session, ApiVersion, ShopifyClients } from '@shopify/shopify-api'
 import type { ShopifyRestResources } from './index.js'
 
 type ShopifyRestInstances<Resources extends ShopifyRestResources> = {

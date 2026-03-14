@@ -1,7 +1,7 @@
 import {
   InvalidJwtError,
   shopifyApi,
-  Shopify as ShopifyApi,
+  type Shopify as ShopifyApi,
   type ConfigParams,
   type RequestReturn,
   type ShopifyRestResources,
