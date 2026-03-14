@@ -97,7 +97,7 @@ class ShopifyService<
       gid2Id(graphQlId: string): string {
         try {
           const id = `/${graphQlId}`
-          const matches = /\/(\w[\w-]*)(?:\?(.*))*$/.exec(id)
+          const matches = /\/(\w[\w-]*)(?:\?(.*))?$/.exec(id)
           if (matches && matches[1] !== undefined) {
             return matches[1]
           }
