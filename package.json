@@ -64,7 +64,7 @@
     "@adonisjs/tsconfig": "^1.4.1",
     "@japa/assert": "^4.2.0",
     "@japa/runner": "^5.3.0",
-    "@release-it/conventional-changelog": "^10.0.6",
+    "@release-it/conventional-changelog": "^11.0.1",
     "@swc/core": "^1.15.18",
     "@types/node": "^25.5.0",
     "c8": "^11.0.0",
