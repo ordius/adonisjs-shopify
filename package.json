@@ -57,7 +57,7 @@
   "author": "Mixxtor",
   "license": "MIT",
   "devDependencies": {
-    "@adonisjs/assembler": "^7.8.2",
+    "@adonisjs/assembler": "^8.4.0",
     "@adonisjs/core": "^6.20.0",
     "@adonisjs/eslint-config": "^3.0.0",
     "@adonisjs/prettier-config": "^1.4.5",
