@@ -93,8 +93,7 @@
     "url": "https://github.com/ordius/adonisjs-shopify/issues"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "next"
+    "access": "public"
   },
   "release-it": {
     "git": {
