@@ -1,0 +1,61 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - next
+          - beta
+          - alpha
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # release-it pushes the version commit + tag and creates the GitHub release
+  id-token: write # required for npm trusted publishing (OIDC)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # release-it needs full history for the changelog
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing needs npm >= 11.5.1
+      - run: npm install -g npm@latest
+
+      - run: npm install
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+
+      - name: git config
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git branch --set-upstream-to="origin/${GITHUB_REF_NAME}" "${GITHUB_REF_NAME}" || true
+
+      - name: release
+        run: npm run release:${{ inputs.release_type }} -- --ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No NPM_TOKEN / NODE_AUTH_TOKEN on purpose:
+          # npm mints a short-lived token via OIDC from the trusted publisher config.
