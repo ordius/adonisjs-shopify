@@ -254,7 +254,19 @@ const SHOPIFY_GQL_API_PLANS = {
   },
 } as const
 
+/**
+ * How far an App Proxy `timestamp` may sit from the app's clock before the request is
+ * refused. Shopify signs at forward time, so a legitimate request is never older than the
+ * hop; the window only absorbs clock skew. Matches the clock tolerance
+ * `@shopify/shopify-api` applies to its own HMAC validation, so the two never disagree on
+ * the same request.
+ */
+export const APP_PROXY_TIMESTAMP_TOLERANCE_SECONDS = 90
+
 export const SHOPIFY = {
+  APP_PROXY: {
+    TIMESTAMP_TOLERANCE_SECONDS: APP_PROXY_TIMESTAMP_TOLERANCE_SECONDS,
+  },
   RESOURCE: {
     // support resource
     PRODUCT: 'product',

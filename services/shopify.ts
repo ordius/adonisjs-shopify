@@ -9,7 +9,7 @@ import {
 import '@shopify/shopify-api/adapters/node'
 import crypto from 'node:crypto'
 import jwt from 'jsonwebtoken'
-import { SHOPIFY } from '../src/constants/shopify.js'
+import { APP_PROXY_TIMESTAMP_TOLERANCE_SECONDS, SHOPIFY } from '../src/constants/shopify.js'
 import { Scope } from '../src/scope.js'
 import type { TPlanGroup, TPlanName, TShopifyPlan } from '../src/types/plan.js'
 import type { ShopifyConfig } from '../src/index.js'
@@ -19,6 +19,17 @@ import type {
   TShopifyGResource,
   ShopifyGqlResult,
 } from '../src/types/index.js'
+
+/**
+ * Compare two signatures without leaking, through timing, how many leading characters of a
+ * forgery were right. Only the length is observable, which the value's own format already is.
+ */
+function timingSafeCompare(a: string, b: string): boolean {
+  const left = Buffer.from(a, 'utf8')
+  const right = Buffer.from(b, 'utf8')
+
+  return left.length === right.length && crypto.timingSafeEqual(left, right)
+}
 
 class ShopifyService<
   Params extends ConfigParams<Resources, Future>,
@@ -222,16 +233,18 @@ class ShopifyService<
       /**
        * Verifies the provided signature to detect which app was used.
        *
-       * This function checks the provided signature against a list of apps (including the main app),
-       * to determine which app's secret was used to create the signature. It first prepares a payload
-       * from the query parameters excluding the signature, and then iterates through the list of apps,
-       * checking the HMAC of the payload against the provided signature.
-       *
-       * This usually is used for webhook/app proxy verification.
+       * Checks the signature against every configured app (main app first) and returns the one
+       * whose secret produced it. The comparison is timing-safe: the signature is
+       * attacker-controlled, so `===` leaks how far a forgery matched.
        *
        * @param queryParams - The query parameters including the signature to be verified.
        * @param shopifyApps - Optional. An array of Shopify app credentials.
-       * @returns The app configuration of the app whose secret matches the signature, or undefined if no match is found.
+       * @returns The app whose secret matches the signature, or `undefined` if none does.
+       *
+       * @deprecated For **App Proxy** requests use {@link verifyAppProxySignature} instead: it
+       * reads the raw query string (repeated parameters must be joined as `key=v1,v2`, and a
+       * nested-object query parser mangles keys like `a[b]` beyond recovery) and it checks the
+       * `timestamp`, without which a captured proxy URL replays forever.
        */
       verifySignatureThroughApps(
         queryParams: { signature: string } & Record<string, string>,
@@ -244,9 +257,69 @@ class ShopifyService<
           .join('')
         const usedApps = shopifyApps ?? this.getUsedApps()
 
-        return usedApps.find(
-          (a) =>
-            signature === crypto.createHmac('sha256', a.api_secret).update(payload).digest('hex')
+        return usedApps.find((a) =>
+          timingSafeCompare(
+            signature,
+            crypto.createHmac('sha256', a.api_secret).update(payload).digest('hex')
+          )
+        )
+      },
+
+      /**
+       * Verify the signature Shopify puts on an **App Proxy** request and return the app whose
+       * secret produced it — `undefined` when no configured app did, or when the signature or
+       * the timestamp is missing, malformed or stale.
+       *
+       * Implements Shopify's reference algorithm, deliberately over the **raw** query string
+       * rather than a framework-parsed one: Shopify signs `key=value` pairs in the shape
+       * `Rack::Utils.parse_query` produces (`a[b]=1` keeps the literal key `a[b]`, repeated keys
+       * collapse into one `key=v1,v2` pair), which is what `URLSearchParams` reproduces and what
+       * a nested-object parser (`qs`) destroys. The pairs are sorted **as strings**, joined with
+       * no separator, HMAC-SHA256'd, and compared to the hex `signature` in constant time.
+       *
+       * The `timestamp` Shopify stamps at forward time is checked as well — without it a URL
+       * captured from a merchant's browser stays valid forever. Pass
+       * `toleranceSeconds: false` only for a caller that verifies freshness itself.
+       *
+       * @param rawQuery - The request's raw query string (e.g. `request.parsedUrl.query`).
+       * @param options.shopifyApps - Apps to check against. Defaults to `getUsedApps()`.
+       * @param options.now - Unix seconds to compare the timestamp against. Defaults to now.
+       * @param options.toleranceSeconds - Freshness window, or `false` to skip the check.
+       *
+       * @see https://shopify.dev/docs/apps/build/online-store/display-dynamic-data#calculate-a-digital-signature
+       */
+      verifyAppProxySignature(
+        rawQuery: string | URLSearchParams,
+        options: {
+          shopifyApps?: ShopifyAppCredentials[]
+          now?: number
+          toleranceSeconds?: number | false
+        } = {}
+      ): ShopifyAppCredentials | undefined {
+        const params = new URLSearchParams(rawQuery)
+        const signature = params.get('signature')
+        if (!signature) return undefined
+
+        const { toleranceSeconds = APP_PROXY_TIMESTAMP_TOLERANCE_SECONDS } = options
+        if (toleranceSeconds !== false) {
+          const timestamp = Number(params.get('timestamp'))
+          const now = options.now ?? Math.floor(Date.now() / 1000)
+          if (!Number.isFinite(timestamp) || Math.abs(now - timestamp) > toleranceSeconds) {
+            return undefined
+          }
+        }
+
+        params.delete('signature')
+        const payload = Array.from(new Set(params.keys()))
+          .map((key) => `${key}=${params.getAll(key).join(',')}`)
+          .sort()
+          .join('')
+
+        return (options.shopifyApps ?? this.getUsedApps()).find((a) =>
+          timingSafeCompare(
+            signature,
+            crypto.createHmac('sha256', a.api_secret).update(payload).digest('hex')
+          )
         )
       },
 
