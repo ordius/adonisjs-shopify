@@ -160,6 +160,7 @@ declare module '@adonisjs/core/types' {
   }
 }
 
+export type * from './webhook.js'
 export type { Shopify } from './rest.js'
 export type * from './resource.js'
 export type * from '../../services/shopify.js'

@@ -233,6 +233,52 @@ export default class WebhookController {
 }
 ```
 
+## App Proxy requests
+
+Shopify signs every App Proxy request (`https://{shop}/apps/{prefix}/*` forwarded to your app)
+with the app secret. Verify it against **the raw query string** — a nested-object parser mangles
+keys like `a[b]` and repeated parameters, both of which Shopify signs verbatim:
+
+```typescript
+import type { HttpContext } from '@adonisjs/core/http'
+import shopify from '@ordius/adonisjs-shopify/services/main'
+
+export default class StorefrontMiddleware {
+  async handle({ request, response }: HttpContext, next: () => Promise<void>) {
+    // Checks the HMAC against every configured app (main + `trusted_apps`) in constant time,
+    // and refuses a `timestamp` older than 90s so a captured URL cannot be replayed.
+    const app = shopify.helper.verifyAppProxySignature(request.parsedUrl.query ?? '')
+    if (!app) {
+      return response.unauthorized()
+    }
+
+    return next()
+  }
+}
+```
+
+Options: `shopifyApps` (defaults to `getUsedApps()`), `now` (unix seconds, for tests) and
+`toleranceSeconds` (`false` to skip the freshness check when the caller does it itself).
+
+`verifySignatureThroughApps()` remains for signatures your own app minted over a flat parameter
+map; it is **deprecated for App Proxy** because it cannot see repeated keys and does not check
+the timestamp.
+
+### Webhook payload types
+
+`app_subscriptions/update` and `app_subscriptions/approaching_capped_amount` are typed, since an
+app has to act on them rather than merely acknowledge them:
+
+```typescript
+import type {
+  TAppSubscriptionWebhookPayload,
+  TAppSubscriptionStatus,
+} from '@ordius/adonisjs-shopify/types'
+
+const { app_subscription: subscription } = request.body() as TAppSubscriptionWebhookPayload
+// subscription?.status: 'ACTIVE' | 'CANCELLED' | 'DECLINED' | 'EXPIRED' | 'FROZEN' | 'PENDING'
+```
+
 ### Benefits
 
 - ✅ Full IntelliSense support for all Shopify REST resources
