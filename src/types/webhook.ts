@@ -30,8 +30,15 @@ export type TAppSubscriptionStatus =
 /**
  * Body of `app_subscriptions/update` and `app_subscriptions/approaching_capped_amount`.
  *
- * `capped_amount` and `balance_used` are money values, which Shopify serializes as decimal
- * **strings** — parse them, do not compare them.
+ * The two topics do **not** share a field set — verified against real deliveries
+ * (`shopify app webhook trigger`, API version 2026-04), not the docs:
+ * - `update` carries `status`, `price`, `interval`, `plan_handle` and `currency`.
+ * - `approaching_capped_amount` carries **no `status`**, adds `balance_used`, and spells the
+ *   currency `currency_code`.
+ *
+ * Money is inconsistent even within one payload: `capped_amount` arrives as a decimal
+ * **string** (`"20.0"`) while `balance_used` arrives as a **number** (`0`). Read both with a
+ * presence check — `value ? Number(value) : null` turns a real zero balance into "unknown".
  */
 export type TAppSubscriptionWebhookPayload = {
   app_subscription?: {
@@ -40,12 +47,22 @@ export type TAppSubscriptionWebhookPayload = {
     /** `gid://shopify/Shop/548380009` */
     admin_graphql_api_shop_id?: string
     name?: string
+    /** `update` topic only. */
     status?: TAppSubscriptionStatus
-    /** Only on the capped-amount topic. */
+    /** Money; a decimal string in observed deliveries. Both topics. */
     capped_amount?: string | number | null
-    /** Only on the capped-amount topic. */
+    /** Money; a **number** in observed deliveries. `approaching_capped_amount` only. */
     balance_used?: string | number | null
+    /** Money; `update` topic only. */
+    price?: string | number | null
+    /** `every_30_days` | `annual`. `update` topic only. */
+    interval?: string
+    /** Managed-pricing plan handle. `update` topic only. */
+    plan_handle?: string
+    /** `update` topic. */
     currency?: string
+    /** `approaching_capped_amount` topic — same value, different key. */
+    currency_code?: string
     created_at?: string
     updated_at?: string
   }
