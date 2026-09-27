@@ -69,8 +69,9 @@ export type TAppSubscriptionWebhookPayload = {
 }
 
 /**
- * Body of `app_scopes_update`, delivered when a merchant approves or revokes access scopes for
- * the app (e.g. after an optional-scope prompt).
+ * Body of `app/scopes_update`, delivered whenever the installation's granted access scopes change:
+ * a merchant approving or revoking an optional scope, the app revoking one, or a deployed
+ * configuration that reduces the required scopes (no merchant prompt in that case).
  *
  * Unlike the `app_subscriptions` payloads above, this shape is taken from shopify.dev's
  * documented example payload and has **not** been verified against a real delivery. Deliveries

@@ -78,7 +78,7 @@ test.group('Scope#equals (deprecated)', () => {
     assert.isTrue(scope.equals('write_products'))
   })
 
-  test('returns false only when the argument spells out every implied scope too', ({ assert }) => {
+  test('returns false when the argument spells out every implied scope too', ({ assert }) => {
     const scope = new Scope(['write_products'])
 
     assert.isFalse(scope.equals(['write_products', 'read_products']))
@@ -88,5 +88,13 @@ test.group('Scope#equals (deprecated)', () => {
     const scope = new Scope(['read_products'])
 
     assert.isTrue(scope.equals('read_orders'))
+  })
+
+  test('returns false for a strict superset although the sets differ — the check is one-sided', ({
+    assert,
+  }) => {
+    const scope = new Scope(['read_products'])
+
+    assert.isFalse(scope.equals(['read_products', 'read_orders']))
   })
 })
