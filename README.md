@@ -29,7 +29,10 @@ SHOPIFY_API_KEY=your_api_key
 SHOPIFY_API_SECRET=your_api_secret
 SHOPIFY_API_VERSION=2025-01
 SHOPIFY_HOST_NAME=your-app-domain.com
-SHOPIFY_SCOPES=read_products,write_products,read_orders
+# Optional under Shopify managed installation, where `shopify.app.toml`'s `scopes` /
+# `optional_scopes` are the source of truth and a shop's granted scopes come from
+# `currentAppInstallation.accessScopes`, not this variable.
+SHOPIFY_API_SCOPES=read_products,write_products,read_orders
 ```
 
 ### 3. Provider Registration
@@ -70,10 +73,10 @@ const shopifyConfig = defineConfig({
     apiSecretKey: env.get('SHOPIFY_API_SECRET'),
     apiVersion: env.get('SHOPIFY_API_VERSION', '2025-01'),
     hostName: env.get('SHOPIFY_HOST_NAME'),
-    scopes: env.get('SHOPIFY_SCOPES', '').split(','),
-    scopes: env.get('SHOPIFY_API_SCOPES', 'read_products')?.split(','),
     hostScheme: 'https',
-    hostName: env.get('SHOPIFY_HOST_NAME'),
+    // Optional under Shopify managed installation — `shopify.app.toml`'s `scopes` /
+    // `optional_scopes` are the source of truth there instead.
+    scopes: env.get('SHOPIFY_API_SCOPES', 'read_products')?.split(','),
     isEmbeddedApp: true,
     isPrivateApp: false,
     // Add other Shopify configuration options as needed
@@ -278,6 +281,26 @@ import type {
 const { app_subscription: subscription } = request.body() as TAppSubscriptionWebhookPayload
 // subscription?.status: 'ACTIVE' | 'CANCELLED' | 'DECLINED' | 'EXPIRED' | 'FROZEN' | 'PENDING'
 ```
+
+### Access scopes
+
+`shopify.helper.scope` holds the app's **configured** scopes (`config.app.scopes`) — not a shop's
+granted ones, and empty under Shopify managed installation, where `scopes` is typically omitted
+and `shopify.app.toml` is the source of truth. Check coverage with `has()` / `missing()`, which
+expand implied scopes (`write_x` ⇒ `read_x`) via `AuthScopes` from `@shopify/shopify-api`:
+
+```typescript
+shopify.helper.scope.has('write_products') // true — also covers the implied read_products
+shopify.helper.scope.missing(['read_orders', 'write_products']) // scopes not covered, input order
+```
+
+`equals()` is **deprecated**: it returns `true` when the sets _differ_, and also whenever the
+argument spells a `write_x` scope without its `read_x` counterpart — which is how Shopify reports
+granted scopes, so it flags every up-to-date shop. Use `has()` / `missing()` instead.
+
+`app_scopes_update` deliveries are typed as `TAppScopesUpdateWebhookPayload`; the shape follows
+Shopify's documented example only (not verified against a real delivery), and since deliveries can
+arrive out of order, refetch `currentAppInstallation.accessScopes` rather than trust `current`.
 
 ### Benefits
 

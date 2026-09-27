@@ -67,3 +67,24 @@ export type TAppSubscriptionWebhookPayload = {
     updated_at?: string
   }
 }
+
+/**
+ * Body of `app_scopes_update`, delivered when a merchant approves or revokes access scopes for
+ * the app (e.g. after an optional-scope prompt).
+ *
+ * Unlike the `app_subscriptions` payloads above, this shape is taken from shopify.dev's
+ * documented example payload and has **not** been verified against a real delivery. Deliveries
+ * can also arrive out of order, so a consumer that needs the shop's actual scope state should
+ * refetch `currentAppInstallation.accessScopes` rather than trust `current` here.
+ */
+export type TAppScopesUpdateWebhookPayload = {
+  /** Numeric id of the event, as reported by Shopify. */
+  id?: number
+  /** `gid://shopify/Shop/…` of the shop the scopes changed for. */
+  shop_id?: string
+  /** Scopes the app had before this change. */
+  previous?: string[]
+  /** Scopes the app has after this change — do not trust ordering across deliveries. */
+  current?: string[]
+  updated_at?: string
+}
