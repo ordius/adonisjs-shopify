@@ -75,8 +75,14 @@ const shopifyConfig = defineConfig({
     hostName: env.get('SHOPIFY_HOST_NAME'),
     hostScheme: 'https',
     // Optional under Shopify managed installation — `shopify.app.toml`'s `scopes` /
-    // `optional_scopes` are the source of truth there instead.
-    scopes: env.get('SHOPIFY_API_SCOPES', 'read_products')?.split(','),
+    // `optional_scopes` are the source of truth there, so leave it `undefined` when the variable
+    // is unset rather than defaulting to a list. Set it explicitly only for the legacy
+    // authorization-code install flow, which sends it as the `scope` parameter.
+    scopes: env
+      .get('SHOPIFY_API_SCOPES')
+      ?.split(',')
+      .map((scope) => scope.trim())
+      .filter(Boolean),
     isEmbeddedApp: true,
     isPrivateApp: false,
     // Add other Shopify configuration options as needed
@@ -294,11 +300,13 @@ shopify.helper.scope.has('write_products') // true — also covers the implied r
 shopify.helper.scope.missing(['read_orders', 'write_products']) // scopes not covered, input order
 ```
 
-`equals()` is **deprecated**: it returns `true` when the sets _differ_, and also whenever the
-argument spells a `write_x` scope without its `read_x` counterpart — which is how Shopify reports
-granted scopes, so it flags every up-to-date shop. Use `has()` / `missing()` instead.
+`equals()` is **deprecated**: despite the name it is a one-sided check that returns `true` when the
+current set holds a scope the argument does not list — so it answers `false` for an argument that is
+a strict superset (`['read_products']` vs `['read_products', 'read_orders']`). It also returns `true`
+whenever the argument spells a `write_x` scope without its `read_x` counterpart, which is how Shopify
+reports granted scopes, so it flags every up-to-date shop. Use `has()` / `missing()` instead.
 
-`app_scopes_update` deliveries are typed as `TAppScopesUpdateWebhookPayload`; the shape follows
+`app/scopes_update` deliveries are typed as `TAppScopesUpdateWebhookPayload`; the shape follows
 Shopify's documented example only (not verified against a real delivery), and since deliveries can
 arrive out of order, refetch `currentAppInstallation.accessScopes` rather than trust `current`.
 

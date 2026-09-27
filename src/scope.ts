@@ -8,7 +8,8 @@ import { AuthScopes } from '@shopify/shopify-api'
  * **configured** app scopes, not a shop's granted ones — and it is empty when `scopes` is
  * omitted from the config, as under Shopify managed installation (`shopify.app.toml`'s `scopes`
  * / `optional_scopes` are the source of truth there). To check what a shop has actually granted,
- * build a `Scope` from `currentAppInstallation.accessScopes` instead.
+ * build a `Scope` from the `handle`s of `currentAppInstallation.accessScopes` instead — that field
+ * returns `AccessScope` objects, not strings (`accessScopes.map(({ handle }) => handle)`).
  */
 export class Scope {
   private compressedScopes: string[] = []
@@ -130,8 +131,10 @@ export class Scope {
   /**
    * Checks if the provided scopes are equal to the current scopes.
    *
-   * @deprecated Despite the name, this returns `true` when the scope sets **differ**, not when
-   * they match — the boolean is inverted relative to what "equals" implies. It also returns
+   * @deprecated Despite the name, this is a one-sided check with an inverted boolean: it returns
+   * `true` when the current set holds a scope `newScopes` does not list, and `false` otherwise —
+   * including when `newScopes` is a strict superset (`['read_products']` against
+   * `['read_products', 'read_orders']` answers `false` although the sets differ). It also returns
    * `true` whenever `newScopes` spells a `write_x` scope without its implied `read_x` counterpart
    * spelled out too, even when the current set already covers it — it expands **this** set's
    * implied scopes from the argument and checks them against the argument **un-expanded**. Shopify
@@ -142,7 +145,8 @@ export class Scope {
    * in the next major version.
    *
    * @param {string | string[]} newScopes - The new scopes to compare.
-   * @return {boolean} `true` when the sets differ (see above) — not the plain-English meaning of "equals".
+   * @return {boolean} `true` when the current set holds a scope `newScopes` lacks (see above) — not
+   * the plain-English meaning of "equals".
    */
   equals(newScopes: string | string[]): boolean {
     const newScopeArray =
